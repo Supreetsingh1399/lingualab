@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinguaLab</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: sans-serif;
+      background: #0f0f0f;
+      color: #fff;
+    }
+    #topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: #1a1a1a;
+      border-bottom: 1px solid #333;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+    #topbar .logo {
+      font-weight: 800;
+      color: #8b5cf6;
+      font-size: 1rem;
+    }
+    #topbar .badge {
+      font-size: 0.75rem;
+      background: #1e1e2e;
+      border: 1px solid #6366f1;
+      color: #8b8cf8;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    #sharebar {
+      position: fixed;
+      top: 44px; left: 0; right: 0;
+      background: #111;
+      padding: 6px 14px;
+      font-size: 0.72rem;
+      color: #555;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1a1a1a;
+      z-index: 10;
+    }
+    #sharebar button {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      background: #222;
+      border: 1px solid #333;
+      color: #888;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #messages {
+      margin-top: 88px;
+      margin-bottom: 70px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 100px;
+    }
+    .system-msg {
+      text-align: center;
+      font-size: 0.72rem;
+      color: #444;
+      padding: 4px 0;
+    }
+    .msg {
+      max-width: 80%;
+      display: flex;
+      flex-direction: column;
+    }
+    .msg.mine { align-self: flex-end; align-items: flex-end; }
+    .msg.theirs { align-self: flex-start; align-items: flex-start; }
+    .msg-name {
+      font-size: 0.68rem;
+      color: #555;
+      margin-bottom: 3px;
+    }
+    .bubble {
+      padding: 9px 13px;
+      border-radius: 14px;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .mine .bubble {
+      background: #6366f1;
+      border-bottom-right-radius: 3px;
+    }
+    .theirs .bubble {
+      background: #1e1e1e;
+      border: 1px solid #2a2a2a;
+      border-bottom-left-radius: 3px;
+    }
+    .show-orig, .explain-btn {
+      font-size: 0.68rem;
+      color: #6366f1;
+      cursor: pointer;
+      margin-top: 3px;
+      text-decoration: underline;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    .orig-box, .exp-box {
+      font-size: 0.76rem;
+      color: #999;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 6px 10px;
+      margin-top: 3px;
+      display: none;
+      word-break: break-word;
+      max-width: 100%;
+    }
+    #inputbar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #1a1a1a;
+      border-top: 1px solid #333;
+      padding: 10px 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      z-index: 10;
+    }
+    #inputbar input {
+      flex: 1;
+      padding: 10px 14px;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 22px;
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    #inputbar input:focus { border-color: #6366f1; }
+    #inputbar button {
+      width: 40px;
+      height: 40px;
+      background: #6366f1;
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<div id="topbar">
+  <div>
+    <span class="logo">LinguaLab</span>
+    <span style="color:#444;font-size:0.8rem" id="roomLabel"></span>
+  </div>
+  <span class="badge" id="dialectBadge"></span>
+</div>
+
+<div id="sharebar">
+  <span id="shareText"></span>
+  <button onclick="copyRoom()">Copy Code</button>
+</div>
+
+<div id="messages"></div>
+
+<div id="inputbar">
+  <input id="msgInput" type="text" placeholder="Type a message..."
+    onkeydown="if(event.key==='Enter')sendMessage()"/>
+  <button onclick="sendMessage()">➤</button>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const username = params.get('username') || 'Anonymous';
+  const dialect = params.get('dialect') || 'english';
+  const room = window.location.pathname.split('/').pop();
+
+  const dialectNames = {
+    english:'🗣 English', python:'🐍 Python',
+    javascript:'⚡ JS', finance:'💰 Finance',
+    medical:'🏥 Medical', legal:'⚖️ Legal',
+    math:'📐 Math', 'gen-z':'😎 Gen Z'
+  };
+
+  document.getElementById('roomLabel').textContent = ' · #' + room;
+  document.getElementById('dialectBadge').textContent = dialectNames[dialect] || dialect;
+  document.getElementById('shareText').textContent = 'Room: ' + room;
+
+  function copyRoom() {
+    navigator.clipboard.writeText(room).catch(()=>{});
+    document.querySelector('#sharebar button').textContent = 'Copied!';
+    setTimeout(()=> document.querySelector('#sharebar button').textContent = 'Copy Code', 2000);
+  }
+
+  const socket = io({transports: ['polling']});
+
+socket.on('connect', () => {
+    console.log('connected:', socket.id);
+    socket.emit('join', { room, username });
+});
+
+socket.on('connect_error', (err) => {
+    console.log('connection error:', err);
+});
+
+  function sendMessage() {
+    const input = document.getElementById('msgInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+    socket.emit('message', { room, username, message: msg, dialect });
+    input.value = '';
+  }
+
+  let msgCount = 0;
+
+  function addMessage(data) {
+    const id = msgCount++;
+    const isMine = data.username === username;
+    const showOrig = data.original !== data.translated;
+    const msgs = document.getElementById('messages');
+
+    const div = document.createElement('div');
+    div.className = 'msg ' + (isMine ? 'mine' : 'theirs');
+
+    const name = document.createElement('div');
+    name.className = 'msg-name';
+    name.textContent = (isMine ? 'You' : data.username) + ' · ' + (dialectNames[data.dialect] || data.dialect);
+    div.appendChild(name);
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = data.translated;
+    div.appendChild(bubble);
+
+    if (showOrig) {
+      const toggle = document.createElement('div');
+      toggle.className = 'show-orig';
+      toggle.textContent = '👁 show original';
+      const origBox = document.createElement('div');
+      origBox.className = 'orig-box';
+      origBox.textContent = data.original;
+      toggle.onclick = () => {
+        origBox.style.display = origBox.style.display === 'block' ? 'none' : 'block';
+        toggle.textContent = origBox.style.display === 'block' ? '👁 hide original' : '👁 show original';
+      };
+      div.appendChild(toggle);
+      div.appendChild(origBox);
+    }
+
+    if (!isMine) {
+      const expBtn = document.createElement('button');
+      expBtn.className = 'explain-btn';
+      expBtn.textContent = '💡 explain this';
+      const expBox = document.createElement('div');
+      expBox.className = 'exp-box';
+      expBtn.onclick = () => {
+        if (expBox.style.display === 'block') {
+          expBox.style.display = 'none';
+          return;
+        }
+        expBox.style.display = 'block';
+        expBox.textContent = 'Thinking...';
+        socket.emit('explain', { room, message: data.translated });
+        socket.once('explanation', (res) => {
+          expBox.textContent = '💡 ' + res.explanation;
+        });
+      };
+      div.appendChild(expBtn);
+      div.appendChild(expBox);
+    }
+
+    msgs.appendChild(div);
+    window.scrollTo(0, document.body.scrollHeight);
+  }
+
+  socket.on('message', (data) => {
+    console.log('message received:', data);
+    addMessage(data);
+});
+
+  socket.on('system', (data) => {
+    const div = document.createElement('div');
+    div.className = 'system-msg';
+    div.textContent = data.msg;
+    document.getElementById('messages').appendChild(div);
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+</script>
+</body>
+</html>

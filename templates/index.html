@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinguaLab</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      width: 90%;
+      max-width: 420px;
+      text-align: center;
+    }
+    .logo {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .tagline {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 40px;
+    }
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 28px;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px 16px;
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: #6366f1; }
+    select option { background: #1a1a1a; }
+    .btn {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #2a2a2a;
+      color: #888;
+    }
+    .divider {
+      color: #333;
+      margin: 16px 0;
+      font-size: 0.8rem;
+    }
+    .dialects {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 16px;
+      justify-content: center;
+    }
+    .tag {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      border: 1px solid #2a2a2a;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">LinguaLab</div>
+    <div class="tagline">Chat in any language of thought</div>
+    <div class="card">
+      <input type="text" id="username" placeholder="Your name" maxlength="20"/>
+      <select id="dialect">
+        <option value="english">🗣 Plain English</option>
+        <option value="python">🐍 Python</option>
+        <option value="javascript">⚡ JavaScript</option>
+        <option value="finance">💰 Finance / Commerce</option>
+        <option value="medical">🏥 Medical</option>
+        <option value="legal">⚖️ Legal</option>
+        <option value="math">📐 Mathematics</option>
+        <option value="gen-z">😎 Gen Z</option>
+      </select>
+      <input type="text" id="roomcode" placeholder="Room code (e.g. room123)"/>
+      <button class="btn" onclick="joinRoom()">Join Room</button>
+      <div class="divider">or</div>
+      <button class="btn btn-outline" onclick="createRoom()">Create New Room</button>
+      <div class="dialects">
+        <span class="tag">🐍 Python</span>
+        <span class="tag">⚡ JS</span>
+        <span class="tag">💰 Finance</span>
+        <span class="tag">🏥 Medical</span>
+        <span class="tag">⚖️ Legal</span>
+        <span class="tag">📐 Math</span>
+        <span class="tag">😎 Gen Z</span>
+      </div>
+    </div>
+  </div>
+  <script>
+    function createRoom() {
+      const username = document.getElementById('username').value.trim();
+      const dialect = document.getElementById('dialect').value;
+      if (!username) { alert('Enter your name first'); return; }
+      const room = 'room' + Math.random().toString(36).substr(2, 6);
+      window.location.href = `/chat/${room}?username=${encodeURIComponent(username)}&dialect=${dialect}`;
+    }
+    function joinRoom() {
+      const username = document.getElementById('username').value.trim();
+      const dialect = document.getElementById('dialect').value;
+      const room = document.getElementById('roomcode').value.trim();
+      if (!username) { alert('Enter your name first'); return; }
+      if (!room) { alert('Enter a room code'); return; }
+      window.location.href = `/chat/${room}?username=${encodeURIComponent(username)}&dialect=${dialect}`;
+    }
+  </script>
+</body>
+</html>
