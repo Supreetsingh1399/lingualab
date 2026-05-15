@@ -9,4 +9,5 @@ distro
 sniffio
 typing-extensions
 gunicorn
-eventlet
+gevent
+gevent-websocket
