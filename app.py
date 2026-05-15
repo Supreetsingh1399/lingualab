@@ -5,7 +5,7 @@ from groq import Groq
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'lingualab-secret'
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 client = Groq(api_key=os.environ.get("GROQ_API_KEY")) 
 
 DIALECTS = {
