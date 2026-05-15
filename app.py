@@ -29,15 +29,29 @@ def translate(message, dialect):
     if dialect == "english":
         return message
     prompt = (
-    f"You are translating a chat message into a secret domain language.\n"
-    f"Rules:\n"
-    f"- Translate into: {DIALECTS[dialect]}\n"
-    f"- ONE line only — like a real chat message, not an essay\n"
-    f"- So authentic that ONLY an expert in that domain would understand\n"
-    f"- Someone outside the domain should find it confusing or unreadable\n"
-    f"- No explanations, no labels, no 'Translation:' prefix\n"
-    f"- Reply with ONLY the translated message\n\n"
-    f"Original message: {message}"
+    f"You are a precise translator. Translate this chat message into {DIALECTS[dialect]}.\n\n"
+    f"STRICT RULES:\n"
+    f"- Preserve the EXACT meaning, do not change what the person is saying\n"
+    f"- Only change the vocabulary and style to match the domain\n"
+    f"- ONE line only, short like a chat message\n"
+    f"- No hallucinations, no random words, no philosophy\n"
+    f"- If someone says 'I am tired', say it in domain language meaning 'I am tired'\n"
+    f"- If someone says 'where are you', say it in domain language meaning 'where are you'\n\n"
+    f"EXAMPLES for Python dialect:\n"
+    f"'I am tired' → 'energy.drain() # battery low'\n"
+    f"'where are you' → 'user.get_location()'\n"
+    f"'I am hungry' → 'stomach.isEmpty() == True'\n"
+    f"'how are you' → 'status.check(user)'\n\n"
+    f"EXAMPLES for Finance dialect:\n"
+    f"'I am tired' → 'Current energy reserves at critical low, immediate rest allocation required'\n"
+    f"'where are you' → 'Please disclose your current geographical position'\n"
+    f"'I am hungry' → 'Caloric deficit detected, immediate nutritional investment required'\n\n"
+    f"EXAMPLES for Medical dialect:\n"
+    f"'I am tired' → 'Patient presents with acute fatigue and decreased energy levels'\n"
+    f"'I am hungry' → 'Patient experiencing hypoglycemic symptoms, oral intake recommended'\n\n"
+    f"Now translate this message: {message}\n"
+    f"Dialect: {DIALECTS[dialect]}\n"
+    f"Translation (one line only):"
 )
     for model in MODELS:
         try:
